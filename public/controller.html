@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      id="viewportMeta"
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>ZEST Controller</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="controller-page controller-page-v3">
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+
+    <main class="mobile-ctrl">
+      <section class="mobile-ctrl__shell panel">
+        <header class="mobile-ctrl__header">
+          <div class="mobile-ctrl__copy">
+            <p class="eyebrow">ZEST Controller</p>
+            <h1 id="controllerTitle">Joining room...</h1>
+            <p id="controllerSubtitle" class="lede">Hold steady while we link your phone to the host screen.</p>
+          </div>
+          <div class="mobile-ctrl__header-actions">
+            <button id="startButton" class="control-button control-center" type="button">START</button>
+            <button id="quitButton" class="control-button quit-button" type="button">QUIT</button>
+          </div>
+        </header>
+
+        <section id="shooterControls" class="mobile-ctrl__arcade">
+          <section class="mobile-ctrl__card mobile-ctrl__move-card">
+            <p class="stick-label">Move</p>
+            <div class="mobile-ctrl__stick" id="movePad">
+              <div class="mobile-ctrl__stick-ring"></div>
+              <div class="mobile-ctrl__stick-knob" id="moveKnob"></div>
+            </div>
+            <p class="controller-note">Use your left thumb to move.</p>
+          </section>
+
+          <section class="mobile-ctrl__card mobile-ctrl__action-card">
+            <p class="stick-label">Arcade</p>
+            <div class="mobile-ctrl__menu-buttons">
+              <button id="prevButton" class="control-button" type="button">PREV</button>
+              <button id="nextButton" class="control-button" type="button">NEXT</button>
+            </div>
+            <button id="dashButton" class="control-button control-warm mobile-ctrl__burst" type="button">BURST</button>
+            <button id="fireButton" class="control-button control-accent mobile-ctrl__fire" type="button">FIRE</button>
+            <p id="arcadeNote" class="controller-note">Auto-aim tracks the rival. Browse the shelf with PREV and NEXT, then press START.</p>
+          </section>
+        </section>
+
+        <section id="unoPanel" class="mobile-ctrl__uno hidden">
+          <section class="mobile-ctrl__card">
+            <div class="mobile-ctrl__uno-top">
+              <div>
+                <p class="stick-label">UNO Hand</p>
+                <h2 id="unoTurnLabel">Waiting...</h2>
+              </div>
+              <div class="mobile-ctrl__uno-actions">
+                <button id="unoDrawButton" class="control-button control-accent" type="button">DRAW</button>
+                <button id="unoPassButton" class="control-button hidden" type="button">PASS</button>
+              </div>
+            </div>
+            <p id="unoHint" class="controller-note">Your hand appears here when UNO starts.</p>
+            <div id="unoHand" class="mobile-ctrl__uno-hand"></div>
+          </section>
+        </section>
+
+        <section id="unoResultPanel" class="mobile-ctrl__result hidden">
+          <section class="mobile-ctrl__card">
+            <p class="stick-label">UNO Winner</p>
+            <h2 id="unoResultTitle">Winner</h2>
+            <p id="unoResultBody" class="controller-note">Choose what happens next.</p>
+            <div class="mobile-ctrl__result-actions">
+              <button id="unoPlayAgainButton" class="control-button control-center" type="button">PLAY AGAIN</button>
+              <button id="unoMenuButton" class="control-button quit-button" type="button">RETURN TO MENU</button>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <div id="wildColorPicker" class="mobile-ctrl__wild hidden">
+      <div class="mobile-ctrl__wild-card panel">
+        <p class="stick-label">Choose Color</p>
+        <div class="mobile-ctrl__wild-grid">
+          <button data-color="red" class="mobile-ctrl__wild-button mobile-ctrl__wild-button--red" type="button">RED</button>
+          <button data-color="yellow" class="mobile-ctrl__wild-button mobile-ctrl__wild-button--yellow" type="button">YELLOW</button>
+          <button data-color="green" class="mobile-ctrl__wild-button mobile-ctrl__wild-button--green" type="button">GREEN</button>
+          <button data-color="blue" class="mobile-ctrl__wild-button mobile-ctrl__wild-button--blue" type="button">BLUE</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/controller.js"></script>
+  </body>
+</html>

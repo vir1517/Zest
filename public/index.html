@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZEST</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="host-page">
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <main class="layout">
+      <section class="sidebar panel">
+        <p class="eyebrow">ZEST</p>
+        <h1>Phones become controllers. The room becomes the arena.</h1>
+        <p class="lede">
+          Scan once on two phones, lock in, and launch a sharp 1v1 duel built for fast local play.
+        </p>
+
+        <div class="hero-card">
+          <img id="qrImage" alt="Room QR code" class="qr-image" />
+          <div>
+            <p class="meta-label">Room Code</p>
+            <p id="roomCode" class="room-code">...</p>
+            <a id="joinUrl" class="join-link" href="#"></a>
+          </div>
+        </div>
+
+        <div id="playerStatus" class="player-status"></div>
+
+        <div class="menu-card">
+          <div class="menu-head">
+            <div>
+              <p class="meta-label">Game Select</p>
+              <h2>Arcade Shelf</h2>
+            </div>
+            <span class="pill">2 games live</span>
+          </div>
+          <div id="menuList" class="menu-list"></div>
+        </div>
+      </section>
+
+      <section class="stage panel">
+        <canvas id="gameCanvas" width="1280" height="720"></canvas>
+        <div id="overlay" class="overlay"></div>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
