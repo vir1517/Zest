@@ -1248,15 +1248,15 @@ body.playing .overlay {
     overflow: hidden;
   }
 
-  /* Joystick: scale to available height */
+  /* Joystick: size relative to landscape height, no hard cap */
   .mobile-ctrl__stick {
-    width: min(30vh, 140px);
-    width: min(30dvh, 140px);
+    width: min(52vh, 200px);
+    width: min(52dvh, 200px);
   }
 
   .mobile-ctrl__stick-knob {
-    width: min(12vh, 48px);
-    width: min(12dvh, 48px);
+    width: min(18vh, 64px);
+    width: min(18dvh, 64px);
   }
 
   .mobile-ctrl__move-card {
@@ -1363,12 +1363,12 @@ body.playing .overlay {
   }
 
   .mobile-ctrl__stick {
-    width: min(26vh, 110px);
-    width: min(26dvh, 110px);
+    width: min(44vh, 160px);
+    width: min(44dvh, 160px);
   }
 
   .mobile-ctrl__stick-knob {
-    width: min(10vh, 38px);
-    width: min(10dvh, 38px);
+    width: min(15vh, 52px);
+    width: min(15dvh, 52px);
   }
 }
