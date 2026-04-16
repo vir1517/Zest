@@ -938,7 +938,7 @@ body.playing .overlay {
   padding: 14px;
   display: grid;
   gap: 14px;
-  overflow: hidden;
+  /* removed overflow:hidden — it was blocking scroll */
 }
 
 .mobile-ctrl__header {
@@ -949,6 +949,16 @@ body.playing .overlay {
 
 .mobile-ctrl__copy {
   min-width: 0;
+}
+
+.mobile-ctrl__copy h1 {
+  font-size: clamp(1rem, 4vw, 2rem);
+  line-height: 1.1;
+}
+
+.mobile-ctrl__copy .lede {
+  font-size: clamp(0.72rem, 2vw, 0.95rem);
+  margin-top: 6px;
 }
 
 .mobile-ctrl__header-actions {
@@ -973,9 +983,11 @@ body.playing .overlay {
 }
 
 .mobile-ctrl__move-card {
-  display: grid;
-  justify-items: center;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .mobile-ctrl__stick {
@@ -1012,7 +1024,8 @@ body.playing .overlay {
 }
 
 .mobile-ctrl__action-card {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
@@ -1023,11 +1036,13 @@ body.playing .overlay {
 }
 
 .mobile-ctrl__burst {
-  min-height: 54px;
+  min-height: 44px;
+  flex-shrink: 0;
 }
 
 .mobile-ctrl__fire {
-  min-height: 86px;
+  min-height: 70px;
+  flex: 1;
   border-radius: 20px;
   font-size: 1.2rem;
   letter-spacing: 0.14em;
@@ -1161,96 +1176,147 @@ body.playing .overlay {
 .mobile-ctrl__wild-button--green { background: linear-gradient(180deg, #64e69d, #149b60); }
 .mobile-ctrl__wild-button--blue { background: linear-gradient(180deg, #68ddff, #1698d7); }
 
+/* ── Landscape: fit everything into the viewport, no scrolling needed ── */
 @media (orientation: landscape) {
+  .controller-page-v3 {
+    /* lock to viewport height so nothing overflows */
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   .mobile-ctrl {
-    padding: 8px;
-  }
-
-  .mobile-ctrl__shell {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .mobile-ctrl__header {
-    grid-template-columns: minmax(0, 1fr) 220px;
-    align-items: start;
-  }
-
-  .mobile-ctrl__header-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .mobile-ctrl__arcade {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: start;
-  }
-
-  .mobile-ctrl__uno-top {
-    grid-template-columns: minmax(0, 1fr) 220px;
-    align-items: start;
-  }
-
-  .mobile-ctrl__uno-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .mobile-ctrl__uno-hand {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
-}
-
-@media (orientation: landscape) and (max-height: 520px) {
-  .mobile-ctrl {
+    height: 100%;
     padding: 6px;
+    display: flex;
+    flex-direction: column;
   }
 
   .mobile-ctrl__shell {
+    flex: 1;
+    min-height: 0;
     padding: 10px;
-    gap: 10px;
+    gap: 8px;
+    /* two-row layout: header row + content row */
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
+  /* Header: title on left, START/QUIT buttons on right — single compact row */
   .mobile-ctrl__header {
-    grid-template-columns: minmax(0, 1fr) 180px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     gap: 10px;
   }
 
   .mobile-ctrl__copy .eyebrow {
-    margin-bottom: 6px;
+    display: none; /* hide "ZEST Controller" label to save vertical space */
   }
 
   .mobile-ctrl__copy h1 {
-    font-size: 1.05rem;
+    font-size: clamp(0.85rem, 2.4vh, 1.15rem);
+    line-height: 1.1;
   }
 
-  .mobile-ctrl__copy .lede,
-  .mobile-ctrl .controller-note {
-    font-size: 0.68rem;
+  .mobile-ctrl__copy .lede {
+    font-size: clamp(0.6rem, 1.6vh, 0.76rem);
+    margin-top: 3px;
+  }
+
+  .mobile-ctrl__header-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .mobile-ctrl__header-actions .control-button {
+    min-height: 0;
+    padding: 8px 14px;
+    font-size: 0.72rem;
+  }
+
+  /* Arcade section: move joystick on left, action buttons on right */
+  .mobile-ctrl__arcade {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 8px;
+    min-height: 0;
   }
 
   .mobile-ctrl__card {
     padding: 10px;
+    min-height: 0;
+    overflow: hidden;
   }
 
+  /* Joystick: scale to available height */
   .mobile-ctrl__stick {
-    width: min(26vw, 130px);
+    width: min(30vh, 140px);
+    width: min(30dvh, 140px);
   }
 
   .mobile-ctrl__stick-knob {
-    width: min(12vw, 44px);
+    width: min(12vh, 48px);
+    width: min(12dvh, 48px);
+  }
+
+  .mobile-ctrl__move-card {
+    gap: 6px;
+  }
+
+  /* Action card: tighter gaps, smaller buttons */
+  .mobile-ctrl__action-card {
+    gap: 8px;
+  }
+
+  .mobile-ctrl__menu-buttons {
+    gap: 8px;
+  }
+
+  .mobile-ctrl__burst {
+    min-height: 0;
+    flex: 1;
+    padding: 8px;
+    font-size: 0.78rem;
   }
 
   .mobile-ctrl__fire {
-    min-height: 68px;
-    font-size: 1rem;
+    min-height: 0;
+    flex: 2;
+    padding: 10px;
+    font-size: clamp(0.9rem, 2.6vh, 1.2rem);
   }
 
   .mobile-ctrl .control-button {
-    min-height: 38px;
+    min-height: 0;
+    padding: 8px 10px;
     font-size: 0.74rem;
+  }
+
+  .mobile-ctrl .controller-note {
+    font-size: 0.6rem;
+    margin: 0;
+  }
+
+  .mobile-ctrl__stick-label,
+  .mobile-ctrl .stick-label {
+    font-size: 0.62rem;
+    margin-bottom: 4px;
+  }
+
+  /* UNO layout in landscape */
+  .mobile-ctrl__uno {
+    min-height: 0;
   }
 
   .mobile-ctrl__uno-top {
     grid-template-columns: minmax(0, 1fr) 160px;
+    align-items: start;
+    gap: 8px;
+  }
+
+  .mobile-ctrl__uno-actions {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .mobile-ctrl__uno-hand {
@@ -1259,10 +1325,50 @@ body.playing .overlay {
   }
 
   .mobile-ctrl__uno-corner {
-    font-size: 0.56rem;
+    font-size: 0.54rem;
   }
 
   .mobile-ctrl__uno-label {
-    font-size: 0.74rem;
+    font-size: 0.72rem;
+  }
+
+  /* UNO result panel */
+  .mobile-ctrl__result {
+    min-height: 0;
+  }
+
+  .mobile-ctrl__result-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+}
+
+/* Extra-tight for very short landscape screens (phones < 400px tall) */
+@media (orientation: landscape) and (max-height: 400px) {
+  .mobile-ctrl__shell {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .mobile-ctrl__card {
+    padding: 7px;
+  }
+
+  .mobile-ctrl__copy h1 {
+    font-size: 0.82rem;
+  }
+
+  .mobile-ctrl__copy .lede {
+    font-size: 0.58rem;
+  }
+
+  .mobile-ctrl__stick {
+    width: min(26vh, 110px);
+    width: min(26dvh, 110px);
+  }
+
+  .mobile-ctrl__stick-knob {
+    width: min(10vh, 38px);
+    width: min(10dvh, 38px);
   }
 }
