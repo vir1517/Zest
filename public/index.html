@@ -3,52 +3,61 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZEST</title>
+    <title>ZEST ARCADE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body class="host-page">
     <div class="ambient ambient-a"></div>
     <div class="ambient ambient-b"></div>
-    <main class="layout">
-      <section class="sidebar panel">
-        <p class="eyebrow">ZEST</p>
-        <h1>Phones become controllers. The room becomes the arena.</h1>
-        <p class="lede">
-          Scan once on two phones, lock in, and launch a sharp 1v1 duel built for fast local play.
-        </p>
 
-        <div class="hero-card">
-          <img id="qrImage" alt="Room QR code" class="qr-image" />
-          <div>
-            <p class="meta-label">Room Code</p>
-            <p id="roomCode" class="room-code">...</p>
-            <a id="joinUrl" class="join-link" href="#"></a>
+    <!-- Arcade Marquee -->
+    <div class="arcade-marquee">
+      <span class="marquee-text">◆ ZEST ARCADE ◆ INSERT COINS ◆ PRESS START ◆</span>
+    </div>
+
+    <!-- Main layout: shelf (left) + canvas (right) -->
+    <main class="layout">
+      <!-- Left Panel: QR + Game Shelf -->
+      <section class="shelf-panel panel">
+        <!-- QR Card (top) -->
+        <div class="qr-card">
+          <div class="qr-header">
+            <p class="eyebrow">JOIN THE ARCADE</p>
+            <h2>Scan & Play</h2>
           </div>
+          <div class="qr-body">
+            <img id="qrImage" alt="Room QR code" class="qr-image" />
+            <div class="qr-info">
+              <p class="meta-label">Room Code</p>
+              <p id="roomCode" class="room-code">....</p>
+              <a id="joinUrl" class="join-link" href="#"></a>
+            </div>
+          </div>
+          <div id="playerStatus" class="player-status"></div>
         </div>
 
-        <div id="playerStatus" class="player-status"></div>
-
-        <div class="menu-card">
-          <div class="menu-head">
+        <!-- Game Shelf (bottom) -->
+        <div class="game-shelf">
+          <div class="shelf-header">
             <div>
-              <p class="meta-label">Game Select</p>
-              <h2>Arcade Shelf</h2>
+              <p class="eyebrow">Arcade Shelf</p>
+              <h2>Choose Your Game</h2>
             </div>
             <span class="pill">2 games live</span>
           </div>
-          <div id="menuList" class="menu-list"></div>
+          <div id="menuList" class="game-grid"></div>
         </div>
       </section>
 
+      <!-- Right Panel: Canvas Stage -->
       <section class="stage panel">
         <canvas id="gameCanvas" width="1280" height="720"></canvas>
         <div id="overlay" class="overlay"></div>
+        <div class="scanlines"></div>
       </section>
     </main>
 

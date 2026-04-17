@@ -2,56 +2,65 @@ const socket = io();
 const params = new URLSearchParams(window.location.search);
 const sessionId = params.get("session");
 
-const title = document.getElementById("controllerTitle");
-const subtitle = document.getElementById("controllerSubtitle");
-const movePad = document.getElementById("movePad");
-const moveKnob = document.getElementById("moveKnob");
-const fireButton = document.getElementById("fireButton");
-const dashButton = document.getElementById("dashButton");
-const startButton = document.getElementById("startButton");
-const quitButton = document.getElementById("quitButton");
-const prevButton = document.getElementById("prevButton");
-const nextButton = document.getElementById("nextButton");
-const shooterControls = document.getElementById("shooterControls");
-const unoPanel = document.getElementById("unoPanel");
+// ── DOM refs ──
+const title          = document.getElementById("controllerTitle");
+const subtitle       = document.getElementById("controllerSubtitle");
+const movePad        = document.getElementById("movePad");
+const moveKnob       = document.getElementById("moveKnob");
+const fireButton     = document.getElementById("fireButton");
+const dashButton     = document.getElementById("dashButton");
+const startButton    = document.getElementById("startButton");
+const quitButton     = document.getElementById("quitButton");
+const prevButton     = document.getElementById("prevButton");
+const nextButton     = document.getElementById("nextButton");
+const navControls    = document.getElementById("navControls");
+const shooterControls= document.getElementById("shooterControls");
+const unoPanel       = document.getElementById("unoPanel");
 const unoResultPanel = document.getElementById("unoResultPanel");
-const unoHand = document.getElementById("unoHand");
-const unoTurnLabel = document.getElementById("unoTurnLabel");
-const unoHint = document.getElementById("unoHint");
-const unoDrawButton = document.getElementById("unoDrawButton");
-const unoPassButton = document.getElementById("unoPassButton");
+const unoHand        = document.getElementById("unoHand");
+const unoTurnLabel   = document.getElementById("unoTurnLabel");
+const unoHint        = document.getElementById("unoHint");
+const unoDrawButton  = document.getElementById("unoDrawButton");
+const unoPassButton  = document.getElementById("unoPassButton");
 const unoResultTitle = document.getElementById("unoResultTitle");
-const unoResultBody = document.getElementById("unoResultBody");
+const unoResultBody  = document.getElementById("unoResultBody");
 const unoPlayAgainButton = document.getElementById("unoPlayAgainButton");
-const unoMenuButton = document.getElementById("unoMenuButton");
-const arcadeNote = document.getElementById("arcadeNote");
-const wildColorPicker = document.getElementById("wildColorPicker");
+const unoMenuButton  = document.getElementById("unoMenuButton");
+const arcadeNote     = document.getElementById("arcadeNote");
+const wildColorPicker= document.getElementById("wildColorPicker");
 const wildColorButtons = Array.from(document.querySelectorAll(".mobile-ctrl__wild-button"));
+const navUp          = document.getElementById("navUp");
+const navDown        = document.getElementById("navDown");
+const navLeft        = document.getElementById("navLeft");
+const navRight       = document.getElementById("navRight");
+const navSelect      = document.getElementById("navSelect");
 
+// ── State ──
 const inputState = {
-  moveX: 0,
-  moveY: 0,
-  aimX: 0,
-  aimY: 0,
-  firing: false,
-  dashing: false,
-  menuConfirm: false,
-  menuPrev: false,
-  menuNext: false,
-  menuQuit: false
+  moveX: 0, moveY: 0, aimX: 0, aimY: 0,
+  firing: false, dashing: false,
+  menuConfirm: false, menuPrev: false, menuNext: false, menuQuit: false
 };
-
-let currentView = { mode: "arcade" };
+let currentView = { mode: "nav" };
 let pendingWildCardId = null;
 
+// ── Panels ──
+const ALL_PANELS = [navControls, shooterControls, unoPanel, unoResultPanel];
+
+function showOnly(panel) {
+  ALL_PANELS.forEach(p => p && p.classList.add("hidden"));
+  if (panel) panel.classList.remove("hidden");
+}
+
+// ── Send ──
 function sendState() {
   if (!sessionId) return;
   socket.emit("controller:input", { sessionId, input: inputState });
   inputState.menuConfirm = false;
-  inputState.dashing = false;
-  inputState.menuPrev = false;
-  inputState.menuNext = false;
-  inputState.menuQuit = false;
+  inputState.dashing     = false;
+  inputState.menuPrev    = false;
+  inputState.menuNext    = false;
+  inputState.menuQuit    = false;
 }
 
 function sendAction(action) {
@@ -59,284 +68,225 @@ function sendAction(action) {
   socket.emit("controller:action", { sessionId, action });
 }
 
-function updateKnobPosition(knob, x, y, radius) {
-  knob.style.transform = `translate(${x * radius}px, ${y * radius}px)`;
-}
-
+// ── Joystick ──
 function bindStick(pad, knob, onChange) {
   let pointerId = null;
   let radius = 36;
 
-  function recalcRadius() {
-    radius = Math.max(20, pad.clientWidth * 0.22);
-  }
+  function recalc() { radius = Math.max(20, pad.clientWidth * 0.22); }
 
-  function handleMove(event) {
+  function handleMove(e) {
     const rect = pad.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const dx = event.clientX - cx;
-    const dy = event.clientY - cy;
-    const distance = Math.hypot(dx, dy) || 1;
-    const clamped = Math.min(distance, radius);
-    const x = Number((((dx / distance) * clamped) / radius).toFixed(3));
-    const y = Number((((dy / distance) * clamped) / radius).toFixed(3));
-    updateKnobPosition(knob, x, y, radius);
+    const dx = e.clientX - (rect.left + rect.width / 2);
+    const dy = e.clientY - (rect.top  + rect.height / 2);
+    const dist = Math.hypot(dx, dy) || 1;
+    const clamped = Math.min(dist, radius);
+    const x = Number(((dx / dist * clamped) / radius).toFixed(3));
+    const y = Number(((dy / dist * clamped) / radius).toFixed(3));
+    knob.style.transform = `translate(${x * radius}px, ${y * radius}px)`;
     onChange(x, y);
     sendState();
   }
 
-  function release(event) {
-    if (event.pointerId !== pointerId) return;
+  function release(e) {
+    if (e.pointerId !== pointerId) return;
     pointerId = null;
     pad.classList.remove("active");
-    updateKnobPosition(knob, 0, 0, radius);
+    knob.style.transform = "translate(0,0)";
     onChange(0, 0);
     sendState();
   }
 
-  pad.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    recalcRadius();
-    pointerId = event.pointerId;
+  pad.addEventListener("pointerdown", e => {
+    e.preventDefault(); recalc();
+    pointerId = e.pointerId;
     pad.setPointerCapture(pointerId);
     pad.classList.add("active");
-    handleMove(event);
+    handleMove(e);
   });
-
-  pad.addEventListener("pointermove", (event) => {
-    if (event.pointerId !== pointerId) return;
-    event.preventDefault();
-    handleMove(event);
+  pad.addEventListener("pointermove", e => {
+    if (e.pointerId !== pointerId) return;
+    e.preventDefault(); handleMove(e);
   });
-
-  pad.addEventListener("pointerup", release);
+  pad.addEventListener("pointerup",     release);
   pad.addEventListener("pointercancel", release);
-  window.addEventListener("resize", recalcRadius);
-  recalcRadius();
+  window.addEventListener("resize", recalc);
+  recalc();
 }
 
-bindStick(movePad, moveKnob, (x, y) => {
-  inputState.moveX = x;
-  inputState.moveY = y;
-});
+if (movePad && moveKnob) {
+  bindStick(movePad, moveKnob, (x, y) => { inputState.moveX = x; inputState.moveY = y; });
+}
 
-function bindHoldButton(button, key) {
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    button.classList.add("pressed");
-    inputState[key] = true;
-    sendState();
+// ── Button helpers ──
+function bindHold(btn, key) {
+  if (!btn) return;
+  btn.addEventListener("pointerdown", e => {
+    e.preventDefault(); btn.classList.add("pressed");
+    inputState[key] = true; sendState();
   });
-
-  function release(event) {
-    event.preventDefault();
-    button.classList.remove("pressed");
-    inputState[key] = false;
-    sendState();
-  }
-
-  button.addEventListener("pointerup", release);
-  button.addEventListener("pointercancel", release);
-  button.addEventListener("lostpointercapture", release);
+  const up = e => { e.preventDefault(); btn.classList.remove("pressed"); inputState[key] = false; sendState(); };
+  btn.addEventListener("pointerup",     up);
+  btn.addEventListener("pointercancel", up);
 }
 
-function bindTapButton(button, updater) {
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    button.classList.add("pressed");
-    updater();
-    sendState();
-    window.setTimeout(() => button.classList.remove("pressed"), 120);
+function bindTap(btn, fn) {
+  if (!btn) return;
+  btn.addEventListener("pointerdown", e => {
+    e.preventDefault(); btn.classList.add("pressed");
+    fn(); sendState();
+    setTimeout(() => btn.classList.remove("pressed"), 120);
   });
 }
 
-bindHoldButton(fireButton, "firing");
+bindHold(fireButton, "firing");
+bindTap(dashButton,  () => { inputState.dashing     = true; });
+bindTap(startButton, () => { inputState.menuConfirm = true; });
+bindTap(prevButton,  () => { inputState.menuPrev    = true; });
+bindTap(nextButton,  () => { inputState.menuNext    = true; });
 
-bindTapButton(dashButton, () => {
-  inputState.dashing = true;
-});
-
-bindTapButton(startButton, () => {
-  inputState.menuConfirm = true;
-});
-
-bindTapButton(prevButton, () => {
-  inputState.menuPrev = true;
-});
-
-bindTapButton(nextButton, () => {
-  inputState.menuNext = true;
-});
-
-quitButton.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
+quitButton?.addEventListener("pointerdown", e => {
+  e.preventDefault();
   quitButton.classList.add("pressed");
   inputState.menuQuit = true;
   sendState();
   sendAction({ type: "quit_to_shelf" });
-  window.setTimeout(() => quitButton.classList.remove("pressed"), 120);
+  setTimeout(() => quitButton.classList.remove("pressed"), 120);
 });
 
-unoDrawButton.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  unoDrawButton.classList.add("pressed");
-  sendAction({ type: "uno_draw" });
-  window.setTimeout(() => unoDrawButton.classList.remove("pressed"), 120);
-});
-
-unoPassButton.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  unoPassButton.classList.add("pressed");
-  sendAction({ type: "uno_pass" });
-  window.setTimeout(() => unoPassButton.classList.remove("pressed"), 120);
-});
-
-unoPlayAgainButton.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  unoPlayAgainButton.classList.add("pressed");
-  sendAction({ type: "uno_rematch" });
-  window.setTimeout(() => unoPlayAgainButton.classList.remove("pressed"), 120);
-});
-
-unoMenuButton.addEventListener("pointerdown", (event) => {
-  event.preventDefault();
-  unoMenuButton.classList.add("pressed");
-  sendAction({ type: "quit_to_shelf" });
-  window.setTimeout(() => unoMenuButton.classList.remove("pressed"), 120);
-});
-
-function closeWildPicker() {
-  pendingWildCardId = null;
-  wildColorPicker.classList.add("hidden");
+// ── D-pad (nav mode) ──
+function dpadHold(btn, axis, val) {
+  if (!btn) return;
+  btn.addEventListener("pointerdown", e => {
+    e.preventDefault(); btn.classList.add("pressed");
+    inputState[axis] = val; sendState();
+  });
+  const up = () => { btn.classList.remove("pressed"); inputState[axis] = 0; sendState(); };
+  btn.addEventListener("pointerup",     up);
+  btn.addEventListener("pointercancel", up);
 }
 
-wildColorButtons.forEach((button) => {
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
+dpadHold(navUp,    "moveY", -1);
+dpadHold(navDown,  "moveY",  1);
+dpadHold(navLeft,  "menuPrev" , 0); // handled as tap below
+dpadHold(navRight, "menuNext" , 0);
+
+// Override left/right as taps for menu
+navLeft?.addEventListener("pointerdown", e => {
+  e.preventDefault(); navLeft.classList.add("pressed");
+  inputState.menuPrev = true; sendState();
+  setTimeout(() => navLeft.classList.remove("pressed"), 120);
+});
+navRight?.addEventListener("pointerdown", e => {
+  e.preventDefault(); navRight.classList.add("pressed");
+  inputState.menuNext = true; sendState();
+  setTimeout(() => navRight.classList.remove("pressed"), 120);
+});
+navSelect?.addEventListener("pointerdown", e => {
+  e.preventDefault(); navSelect.classList.add("pressed");
+  inputState.menuConfirm = true; sendState();
+  setTimeout(() => navSelect.classList.remove("pressed"), 120);
+});
+
+// ── UNO actions ──
+unoDrawButton?.addEventListener("pointerdown", e => { e.preventDefault(); sendAction({ type: "uno_draw" }); });
+unoPassButton?.addEventListener("pointerdown", e => { e.preventDefault(); sendAction({ type: "uno_pass" }); });
+unoPlayAgainButton?.addEventListener("pointerdown", e => { e.preventDefault(); sendAction({ type: "uno_rematch" }); });
+unoMenuButton?.addEventListener("pointerdown", e => { e.preventDefault(); sendAction({ type: "quit_to_shelf" }); });
+
+// ── Wild color picker ──
+function closeWildPicker() { pendingWildCardId = null; wildColorPicker.classList.add("hidden"); }
+
+wildColorButtons.forEach(btn => {
+  btn.addEventListener("pointerdown", e => {
+    e.preventDefault();
     if (!pendingWildCardId) return;
-    sendAction({
-      type: "uno_play",
-      cardId: pendingWildCardId,
-      chooseColor: button.dataset.color
-    });
+    sendAction({ type: "uno_play", cardId: pendingWildCardId, chooseColor: btn.dataset.color });
     closeWildPicker();
   });
 });
+wildColorPicker?.addEventListener("pointerdown", e => { if (e.target === wildColorPicker) closeWildPicker(); });
 
-wildColorPicker.addEventListener("pointerdown", (event) => {
-  if (event.target === wildColorPicker) {
-    closeWildPicker();
-  }
-});
-
+// ── Render UNO hand ──
 function renderUnoHand(view) {
   unoHand.innerHTML = "";
   unoTurnLabel.textContent = view.turnLabel || "UNO";
-  unoHint.textContent = view.hint || "Choose a playable card or draw.";
-  unoDrawButton.disabled = !view.canDraw;
+  unoHint.textContent      = view.hint      || "Play a card or draw.";
+  unoDrawButton.disabled   = !view.canDraw;
   unoPassButton.classList.toggle("hidden", !view.canPass);
 
-  for (const card of view.hand || []) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `mobile-ctrl__uno-card ${card.playable ? "is-playable" : "is-locked"}`;
-    button.disabled = !card.playable;
-    button.innerHTML = `
+  for (const card of (view.hand || [])) {
+    const btn = document.createElement("button");
+    btn.className = `mobile-ctrl__uno-card ${card.playable ? "is-playable" : "is-locked"}`;
+    btn.disabled  = !card.playable;
+    btn.style.setProperty("--uno-card-color", card.colorCss);
+    btn.innerHTML = `
       <span class="mobile-ctrl__uno-corner mobile-ctrl__uno-corner--tl">${card.corner}</span>
       <span class="mobile-ctrl__uno-oval"><span class="mobile-ctrl__uno-label">${card.label}</span></span>
       <span class="mobile-ctrl__uno-corner mobile-ctrl__uno-corner--br">${card.corner}</span>
     `;
-    button.style.setProperty("--uno-card-color", card.colorCss);
-    button.addEventListener("pointerdown", (event) => {
-      event.preventDefault();
+    btn.addEventListener("pointerdown", e => {
+      e.preventDefault();
       if (!card.playable) return;
-      if (card.requiresColorChoice) {
-        pendingWildCardId = card.id;
-        wildColorPicker.classList.remove("hidden");
-        return;
-      }
+      if (card.requiresColorChoice) { pendingWildCardId = card.id; wildColorPicker.classList.remove("hidden"); return; }
       sendAction({ type: "uno_play", cardId: card.id });
     });
-    unoHand.appendChild(button);
+    unoHand.appendChild(btn);
   }
 }
 
 function renderUnoResult(view) {
   unoResultTitle.textContent = view.title || "Winner";
-  unoResultBody.textContent = view.body || "Choose what happens next.";
+  unoResultBody.textContent  = view.body  || "Choose what happens next.";
 }
 
+// ── Apply view from host ──
 function applyView(view) {
-  currentView = view || { mode: "arcade" };
-  const mode = currentView.mode || "arcade";
-  const isArcade = mode === "arcade";
-  const isUno = mode === "uno";
-  const isUnoResult = mode === "uno-result";
+  currentView = view || { mode: "nav" };
+  const mode = currentView.mode;
 
-  shooterControls.classList.toggle("hidden", !isArcade);
-  unoPanel.classList.toggle("hidden", !isUno);
-  unoResultPanel.classList.toggle("hidden", !isUnoResult);
-  startButton.classList.toggle("hidden", !isArcade);
-  prevButton.classList.toggle("hidden", !isArcade);
-  nextButton.classList.toggle("hidden", !isArcade);
-  dashButton.classList.toggle("hidden", !isArcade);
-  fireButton.classList.toggle("hidden", !isArcade);
-
-  arcadeNote.textContent = currentView.arcadeHint || "Auto-aim tracks the rival. Browse the shelf with PREV and NEXT, then press START.";
-
-  if (isUno) {
+  if (mode === "nav" || mode === "arcade" && !shooterControls) {
+    showOnly(navControls);
+  } else if (mode === "arcade") {
+    showOnly(shooterControls);
+    arcadeNote.textContent = currentView.arcadeHint || "Auto-aim on. PREV/NEXT browses shelf.";
+  } else if (mode === "uno") {
+    showOnly(unoPanel);
     renderUnoHand(currentView);
-  } else {
-    unoHand.innerHTML = "";
-  }
-
-  if (isUnoResult) {
+  } else if (mode === "uno-result") {
+    showOnly(unoResultPanel);
     renderUnoResult(currentView);
+  } else {
+    showOnly(navControls);
   }
 
-  if (!isUno) {
-    closeWildPicker();
-  }
+  if (mode !== "uno") closeWildPicker();
 }
 
+// ── Init ──
 if (!sessionId) {
-  title.textContent = "Missing room";
-  subtitle.textContent = "Open this page using a valid ZEST room QR code.";
+  title.textContent    = "No room";
+  subtitle.textContent = "Scan a ZEST QR code to join.";
 } else {
   socket.emit("controller:join", { sessionId, nickname: "" });
 }
+applyView({ mode: "nav" });
 
+// ── Socket events ──
 socket.on("controller:accepted", ({ slot }) => {
-  title.textContent = `Player ${slot} synced`;
-  subtitle.textContent = "Your phone is ready. The page scrolls normally, and the control areas stay inside the screen.";
+  title.textContent    = `Player ${slot}`;
+  subtitle.textContent = "Use the D-pad to browse. START to launch a game.";
 });
 
-socket.on("session:state", ({ status, selectedGame, players }) => {
-  if (status === "waiting") {
-    subtitle.textContent = "Waiting for the next player to join the room.";
-    return;
-  }
-
-  if (status === "menu") {
-    subtitle.textContent = `Arcade shelf open. Current game: ${selectedGame === "uno" ? "UNO" : "Pulse Pit"}. ${players.length === 1 ? "Solo mode is available." : "Press START when ready."}`;
-    return;
-  }
-
-  if (status === "playing") {
-    subtitle.textContent = currentView.mode === "uno"
-      ? "UNO is live. Play a card, draw when needed, or quit back to the shelf."
-      : currentView.mode === "uno-result"
-      ? "UNO round over. Play again or return to the menu."
-      : "Pulse Pit is live. Move, fire, burst, or quit whenever you want.";
-  }
+socket.on("session:state", ({ status, selectedGame }) => {
+  if (currentView.mode === "arcade" || currentView.mode === "uno" || currentView.mode === "uno-result") return;
+  if (status === "waiting") subtitle.textContent = "Waiting for more players...";
+  else if (status === "menu") subtitle.textContent = `Shelf open — ${selectedGame === "uno" ? "UNO" : "Pulse Pit"} selected.`;
+  else if (status === "playing") subtitle.textContent = "Game in progress.";
 });
 
-socket.on("controller:view", (view) => {
-  applyView(view);
-});
-
+socket.on("controller:view", applyView);
 socket.on("session:error", ({ message }) => {
-  title.textContent = "Room issue";
+  title.textContent    = "Room error";
   subtitle.textContent = message;
 });

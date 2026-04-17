@@ -9,6 +9,22 @@ const overlay = document.getElementById("overlay");
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// Helper: roundRect for canvas
+CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  this.moveTo(x + r, y);
+  this.lineTo(x + w - r, y);
+  this.quadraticCurveTo(x + w, y, x + w, y + r);
+  this.lineTo(x + w, y + h - r);
+  this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  this.lineTo(x + r, y + h);
+  this.quadraticCurveTo(x, y + h, x, y + h - r);
+  this.lineTo(x, y + r);
+  this.quadraticCurveTo(x, y, x + r, y);
+  return this;
+};
+
 const MENU_GAMES = [
   {
     id: "pulse-pit",
@@ -187,17 +203,38 @@ function renderPlayers() {
     .join("");
 }
 
+// Updated renderMenu for AirConsole-style game cards
 function renderMenu() {
   menuList.innerHTML = MENU_GAMES.map((game, index) => {
     const selected = index === host.state.menuIndex ? "selected" : "";
+    const thumbIcon = game.id === "pulse-pit" ? "⚡" : "🃏";
     return `
-      <article class="menu-item ${selected}">
-        <strong>${game.title}</strong>
-        <div>${game.subtitle}</div>
-        <p>${game.description}</p>
+      <article class="game-card ${selected}" data-game-id="${game.id}">
+        <div class="game-thumb">${thumbIcon}</div>
+        <h3>${game.title}</h3>
+        <div class="game-meta">
+          <span class="game-players">${game.minPlayers}-${game.maxPlayers}p</span>
+          <span class="game-subtitle">${game.subtitle}</span>
+        </div>
+        <p class="game-desc">${game.description}</p>
       </article>
     `;
   }).join("");
+
+  // Add click handlers to select games
+  document.querySelectorAll('.game-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const gameId = card.dataset.gameId;
+      const idx = MENU_GAMES.findIndex(g => g.id === gameId);
+      if (idx !== -1 && idx !== host.state.menuIndex) {
+        host.state.menuIndex = idx;
+        host.state.selectedGame = gameId;
+        updateSession({ menuIndex: idx, selectedGame: gameId });
+        renderMenu();
+        sendArcadeViews(`Selected ${MENU_GAMES[idx].title}. Press START to launch.`);
+      }
+    });
+  });
 }
 
 function updateSession(patch) {
@@ -960,15 +997,15 @@ function drawPulsePit() {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WORLD.width, y); ctx.stroke();
   }
 
-  ctx.strokeStyle = "rgba(68,215,255,0.2)";
+  ctx.strokeStyle = "rgba(0,255,255,0.3)";
   ctx.lineWidth = 6;
   ctx.strokeRect(18, 18, WORLD.width - 36, WORLD.height - 36);
 
   const ringPulse = host.game.speedRing.radius + Math.sin(host.game.speedRing.pulse) * 7;
-  ctx.strokeStyle = "rgba(77,222,145,0.32)";
+  ctx.strokeStyle = "rgba(0,255,136,0.5)";
   ctx.lineWidth = 8;
   ctx.beginPath(); ctx.arc(host.game.speedRing.x, host.game.speedRing.y, ringPulse, 0, Math.PI * 2); ctx.stroke();
-  ctx.fillStyle = "rgba(77,222,145,0.08)";
+  ctx.fillStyle = "rgba(0,255,136,0.1)";
   ctx.beginPath(); ctx.arc(host.game.speedRing.x, host.game.speedRing.y, host.game.speedRing.radius, 0, Math.PI * 2); ctx.fill();
 
   for (const obstacle of host.game.obstacles) {
@@ -977,12 +1014,12 @@ function drawPulsePit() {
     fill.addColorStop(1, "rgba(12,19,38,0.98)");
     ctx.fillStyle = fill;
     drawRoundedRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h, 18, true);
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    ctx.strokeStyle = "rgba(255,0,255,0.2)";
     ctx.lineWidth = 3;
     drawRoundedRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h, 18, false);
   }
 
-  ctx.fillStyle = "rgba(255,200,87,0.18)";
+  ctx.fillStyle = "rgba(255,200,87,0.2)";
   ctx.beginPath(); ctx.arc(host.game.hazard.x, host.game.hazard.y, host.game.hazard.radius + 10, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "#ffc857";
   ctx.shadowColor = "#ffc857";
@@ -1020,12 +1057,12 @@ function drawPulsePit() {
 
   for (const player of host.game.players) {
     if (player.shieldTimer > 0) {
-      ctx.strokeStyle = "rgba(255,255,255,0.55)";
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
       ctx.lineWidth = 4;
       ctx.beginPath(); ctx.arc(player.x, player.y, player.radius + 12, 0, Math.PI * 2); ctx.stroke();
     }
     if (player.speedBoostTimer > 0) {
-      ctx.strokeStyle = "rgba(77,222,145,0.6)";
+      ctx.strokeStyle = "rgba(0,255,136,0.8)";
       ctx.lineWidth = 4;
       ctx.beginPath(); ctx.arc(player.x, player.y, player.radius + 16, 0, Math.PI * 2); ctx.stroke();
     }
@@ -1053,7 +1090,7 @@ function drawPulsePit() {
   ctx.restore();
 
   const [p1, p2] = host.game.players;
-  ctx.fillStyle = "rgba(5,10,22,0.78)";
+  ctx.fillStyle = "rgba(5,10,22,0.9)";
   drawRoundedRect(22, 20, 250, 64, 22, true);
   drawRoundedRect(host.viewport.width - 272, 20, 250, 64, 22, true);
   drawRoundedRect(host.viewport.width / 2 - 110, 18, 220, 58, 20, true);
@@ -1099,6 +1136,89 @@ function drawPulsePit() {
   ctx.textAlign = "start";
 }
 
+// Updated authentic UNO card drawing
+function drawUnoCardFace(x, y, card, facedown = false, currentColor = null) {
+  const w = 140;
+  const h = 196;
+  const color = facedown ? "#1a1a2e" : UNO_COLOR_CSS[currentColor || card.color] || "#2a314a";
+  
+  ctx.save();
+  ctx.shadowColor = "#000000aa";
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 4;
+  
+  // Card background
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(x - w/2, y - h/2, w, h, 16);
+  ctx.fill();
+  
+  // Card border
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.strokeStyle = "#ffffff33";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  
+  if (!facedown) {
+    // White oval
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-0.2);
+    ctx.fillStyle = "#ffffff";
+    ctx.shadowColor = "#00000033";
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 48, 78, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = "#00000022";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+    
+    // Corner values
+    ctx.font = 'bold 28px "Arial Black", sans-serif';
+    ctx.fillStyle = "#ffffff";
+    ctx.shadowColor = "#000000";
+    ctx.shadowBlur = 6;
+    ctx.textAlign = "left";
+    ctx.fillText(formatUnoFaceValue(card), x - 50, y - 68);
+    ctx.textAlign = "right";
+    ctx.fillText(formatUnoFaceValue(card), x + 50, y + 78);
+    
+    // Center value
+    ctx.font = 'bold 56px "Arial Black", sans-serif';
+    ctx.textAlign = "center";
+    ctx.shadowBlur = 10;
+    const textColor = (color === UNO_COLOR_CSS.yellow || color === UNO_COLOR_CSS.wild) ? "#1a1a2e" : "#ffffff";
+    ctx.fillStyle = textColor;
+    ctx.fillText(formatUnoFaceValue(card), x, y + 16);
+    
+    // For wild cards, add four-color indicator
+    if (card.type === "wild" || card.type === "wild4") {
+      const colors = ["#ff5f8f", "#ffc857", "#4dde91", "#44d7ff"];
+      ctx.shadowBlur = 0;
+      for (let i = 0; i < 4; i++) {
+        ctx.fillStyle = colors[i];
+        ctx.beginPath();
+        ctx.arc(x + (i%2===0?-18:18), y + (i<2?-18:18), 10, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  } else {
+    // Facedown: Z logo
+    ctx.font = 'bold 64px "Press Start 2P", cursive';
+    ctx.fillStyle = "#ffffff";
+    ctx.shadowColor = "#000000";
+    ctx.shadowBlur = 12;
+    ctx.textAlign = "center";
+    ctx.fillText("Z", x, y+20);
+  }
+  
+  ctx.restore();
+}
+
 function drawUnoTable() {
   if (!host.game || host.game.type !== "uno") return;
   const { width, height } = host.viewport;
@@ -1113,7 +1233,7 @@ function drawUnoTable() {
   ctx.beginPath();
   ctx.ellipse(width / 2, height / 2, width * 0.33, height * 0.26, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.strokeStyle = "rgba(255,0,255,0.3)";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.ellipse(width / 2, height / 2, width * (0.35 + Math.sin(time * 1.7) * 0.01), height * 0.28, 0, 0, Math.PI * 2);
@@ -1149,7 +1269,7 @@ function drawUnoTable() {
   host.game.players.forEach((player, index) => {
     const seat = positions[index];
     const active = index === host.game.turnIndex;
-    ctx.fillStyle = active ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.07)";
+    ctx.fillStyle = active ? "rgba(255,0,255,0.2)" : "rgba(255,255,255,0.07)";
     drawRoundedRect(seat.x - 100, seat.y - 36, 200, 72, 18, true);
     ctx.fillStyle = "#eef4ff";
     ctx.font = '700 20px "Outfit"';
@@ -1200,39 +1320,6 @@ function drawUnoTable() {
   }
 }
 
-function drawUnoCardFace(x, y, card, facedown = false, currentColor = null) {
-  const w = 120;
-  const h = 170;
-  const color = facedown ? "#2a314a" : UNO_COLOR_CSS[currentColor || card.color] || "#2a314a";
-  ctx.fillStyle = color;
-  drawRoundedRect(x - w / 2, y - h / 2, w, h, 22, true);
-  ctx.strokeStyle = "rgba(255,255,255,0.12)";
-  ctx.lineWidth = 3;
-  drawRoundedRect(x - w / 2, y - h / 2, w, h, 22, false);
-
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(-0.38);
-  ctx.fillStyle = "rgba(255,255,255,0.94)";
-  ctx.beginPath();
-  ctx.ellipse(0, 0, 34, 58, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  const face = facedown ? "Z" : formatUnoFaceValue(card);
-  ctx.fillStyle = "white";
-  ctx.font = '800 20px "Sora"';
-  ctx.textAlign = "left";
-  ctx.fillText(face, x - 42, y - 54);
-  ctx.textAlign = "right";
-  ctx.fillText(face, x + 42, y + 62);
-  ctx.textAlign = "center";
-  ctx.fillStyle = facedown ? "#eef4ff" : (UNO_COLOR_CSS[currentColor || card.color] || "#eef4ff");
-  ctx.font = '800 42px "Sora"';
-  ctx.fillText(face, x, y + 14);
-}
-
-
 function getUnoSeatPositions(count, width, height) {
   const presets = {
     2: [
@@ -1260,6 +1347,21 @@ function drawShelf() {
   gradient.addColorStop(1, "#120b1d");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, host.viewport.width, host.viewport.height);
+  
+  // Arcade high score display (placeholder)
+  //ctx.font = '20px "Press Start 2P"';
+  //ctx.fillStyle = "#ff0";
+  //ctx.shadowColor = "#ff00ff";
+  //ctx.shadowBlur = 10;
+  //ctx.textAlign = "right";
+  //ctx.fillText("HIGH SCORES", host.viewport.width - 40, 60);
+  //ctx.font = '16px "VT323"';
+  //ctx.fillStyle = "#0ff";
+  //ctx.fillText("1. 2500", host.viewport.width - 40, 100);
+  //ctx.fillText("2. 1800", host.viewport.width - 40, 130);
+  //ctx.fillText("3. 1200", host.viewport.width - 40, 160);
+  //ctx.shadowBlur = 0;
+  //ctx.textAlign = "left";
 }
 
 function drawGame() {
@@ -1377,3 +1479,33 @@ boot().catch((error) => {
   setPlayingMode(false);
   showOverlay("Startup failed", "ZEST could not create a live room.");
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
