@@ -9,10 +9,7 @@ const movePad        = document.getElementById("movePad");
 const moveKnob       = document.getElementById("moveKnob");
 const fireButton     = document.getElementById("fireButton");
 const dashButton     = document.getElementById("dashButton");
-const startButton    = document.getElementById("startButton");
 const quitButton     = document.getElementById("quitButton");
-const prevButton     = document.getElementById("prevButton");
-const nextButton     = document.getElementById("nextButton");
 const navControls    = document.getElementById("navControls");
 const shooterControls= document.getElementById("shooterControls");
 const unoPanel       = document.getElementById("unoPanel");
@@ -141,9 +138,6 @@ function bindTap(btn, fn) {
 
 bindHold(fireButton, "firing");
 bindTap(dashButton,  () => { inputState.dashing     = true; });
-bindTap(startButton, () => { inputState.menuConfirm = true; });
-bindTap(prevButton,  () => { inputState.menuPrev    = true; });
-bindTap(nextButton,  () => { inputState.menuNext    = true; });
 
 quitButton?.addEventListener("pointerdown", e => {
   e.preventDefault();
@@ -155,23 +149,24 @@ quitButton?.addEventListener("pointerdown", e => {
 });
 
 // ── D-pad (nav mode) ──
-function dpadHold(btn, axis, val) {
-  if (!btn) return;
-  btn.addEventListener("pointerdown", e => {
-    e.preventDefault(); btn.classList.add("pressed");
-    inputState[axis] = val; sendState();
-  });
-  const up = () => { btn.classList.remove("pressed"); inputState[axis] = 0; sendState(); };
-  btn.addEventListener("pointerup",     up);
-  btn.addEventListener("pointercancel", up);
-}
+navUp?.addEventListener("pointerdown", e => {
+  e.preventDefault(); navUp.classList.add("pressed");
+  inputState.moveY = -1; sendState();
+});
+navUp?.addEventListener("pointerup", () => {
+  navUp.classList.remove("pressed");
+  inputState.moveY = 0; sendState();
+});
+navDown?.addEventListener("pointerdown", e => {
+  e.preventDefault(); navDown.classList.add("pressed");
+  inputState.moveY = 1; sendState();
+});
+navDown?.addEventListener("pointerup", () => {
+  navDown.classList.remove("pressed");
+  inputState.moveY = 0; sendState();
+});
 
-dpadHold(navUp,    "moveY", -1);
-dpadHold(navDown,  "moveY",  1);
-dpadHold(navLeft,  "menuPrev" , 0); // handled as tap below
-dpadHold(navRight, "menuNext" , 0);
-
-// Override left/right as taps for menu
+// Left/Right as menuPrev/menuNext
 navLeft?.addEventListener("pointerdown", e => {
   e.preventDefault(); navLeft.classList.add("pressed");
   inputState.menuPrev = true; sendState();
@@ -182,6 +177,8 @@ navRight?.addEventListener("pointerdown", e => {
   inputState.menuNext = true; sendState();
   setTimeout(() => navRight.classList.remove("pressed"), 120);
 });
+
+// A button as menuConfirm
 navSelect?.addEventListener("pointerdown", e => {
   e.preventDefault(); navSelect.classList.add("pressed");
   inputState.menuConfirm = true; sendState();
@@ -249,7 +246,7 @@ function applyView(view) {
     showOnly(navControls);
   } else if (mode === "arcade") {
     showOnly(shooterControls);
-    arcadeNote.textContent = currentView.arcadeHint || "Auto-aim on. PREV/NEXT browses shelf.";
+    arcadeNote.textContent = currentView.arcadeHint || "Auto-aim on. Move with joystick.";
   } else if (mode === "uno") {
     showOnly(unoPanel);
     renderUnoHand(currentView);
@@ -275,7 +272,7 @@ applyView({ mode: "nav" });
 // ── Socket events ──
 socket.on("controller:accepted", ({ slot }) => {
   title.textContent    = `Player ${slot}`;
-  subtitle.textContent = "Use the D-pad to browse. START to launch a game.";
+  subtitle.textContent = "Use the D-pad to browse. A to launch a game.";
 });
 
 socket.on("session:state", ({ status, selectedGame }) => {

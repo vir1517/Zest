@@ -16,7 +16,7 @@
     <main class="mobile-ctrl">
       <section class="mobile-ctrl__shell panel">
 
-        <!-- ── Header: title + START/QUIT ── -->
+        <!-- Header: only QUIT button remains -->
         <header class="mobile-ctrl__header">
           <div class="mobile-ctrl__copy">
             <p class="ctrl-eyebrow">ZEST</p>
@@ -24,12 +24,11 @@
             <p id="controllerSubtitle" class="ctrl-sub">Connecting to host screen.</p>
           </div>
           <div class="mobile-ctrl__header-actions">
-            <button id="startButton" class="ctrl-btn ctrl-btn--start" type="button">START</button>
             <button id="quitButton" class="ctrl-btn ctrl-btn--quit" type="button">QUIT</button>
           </div>
         </header>
 
-        <!-- ── NAV MODE: D-pad for browsing the shelf ── -->
+        <!-- NAV MODE: D-pad only -->
         <section id="navControls" class="mobile-ctrl__nav">
           <div class="dpad">
             <div class="dpad__row dpad__row--top">
@@ -44,10 +43,10 @@
               <button id="navDown" class="dpad__btn dpad__btn--dir" type="button">▼</button>
             </div>
           </div>
-          <p class="ctrl-note">D-pad to browse · A to confirm · START to launch</p>
+          <p class="ctrl-note">D-pad to browse · A to confirm</p>
         </section>
 
-        <!-- ── ARCADE SHOOTER: joystick + buttons ── -->
+        <!-- ARCADE SHOOTER: joystick + action buttons (no PREV/NEXT) -->
         <section id="shooterControls" class="mobile-ctrl__arcade hidden">
           <!-- LEFT: joystick -->
           <div class="mobile-ctrl__move-card mobile-ctrl__card">
@@ -57,20 +56,16 @@
               <div class="mobile-ctrl__stick-knob" id="moveKnob"></div>
             </div>
           </div>
-          <!-- RIGHT: buttons -->
+          <!-- RIGHT: action buttons -->
           <div class="mobile-ctrl__action-card mobile-ctrl__card">
             <p class="ctrl-label">ACTION</p>
-            <div class="mobile-ctrl__menu-buttons">
-              <button id="prevButton" class="ctrl-btn ctrl-btn--small" type="button">PREV</button>
-              <button id="nextButton" class="ctrl-btn ctrl-btn--small" type="button">NEXT</button>
-            </div>
             <button id="dashButton" class="ctrl-btn ctrl-btn--burst" type="button">BURST</button>
             <button id="fireButton" class="ctrl-btn ctrl-btn--fire" type="button">FIRE</button>
-            <p id="arcadeNote" class="ctrl-note">Auto-aim on. PREV/NEXT browses shelf.</p>
+            <p id="arcadeNote" class="ctrl-note">Auto-aim on. Move with joystick.</p>
           </div>
         </section>
 
-        <!-- ── UNO: hand of cards ── -->
+        <!-- UNO: hand of cards (unchanged) -->
         <section id="unoPanel" class="mobile-ctrl__uno hidden">
           <div class="mobile-ctrl__card">
             <div class="uno-top">
@@ -88,7 +83,7 @@
           </div>
         </section>
 
-        <!-- ── UNO RESULT ── -->
+        <!-- UNO RESULT (unchanged) -->
         <section id="unoResultPanel" class="mobile-ctrl__result hidden">
           <div class="mobile-ctrl__card result-card">
             <p class="ctrl-label">ROUND OVER</p>
@@ -101,10 +96,10 @@
           </div>
         </section>
 
-      </section><!-- /.mobile-ctrl__shell -->
+      </section>
     </main>
 
-    <!-- Wild color picker overlay -->
+    <!-- Wild color picker overlay (unchanged) -->
     <div id="wildColorPicker" class="wild-picker hidden">
       <div class="wild-picker__card panel">
         <p class="ctrl-label">CHOOSE COLOR</p>

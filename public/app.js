@@ -231,7 +231,7 @@ function renderMenu() {
         host.state.selectedGame = gameId;
         updateSession({ menuIndex: idx, selectedGame: gameId });
         renderMenu();
-        sendArcadeViews(`Selected ${MENU_GAMES[idx].title}. Press START to launch.`);
+        sendNavViews(`Selected ${MENU_GAMES[idx].title}. Press START to launch.`);
       }
     });
   });
@@ -257,6 +257,13 @@ function sendControllerViews(viewMap) {
   socket.emit("host:broadcast-view", { sessionId: host.sessionId, view: viewMap });
 }
 
+// NEW: send nav mode (D-pad) for the arcade shelf
+function sendNavViews(hint) {
+  const viewMap = { default: { mode: "nav", navHint: hint } };
+  sendControllerViews(viewMap);
+}
+
+// Send arcade shooter controls when Pulse Pit starts
 function sendArcadeViews(hint) {
   const viewMap = { default: { mode: "arcade", arcadeHint: hint } };
   sendControllerViews(viewMap);
@@ -927,7 +934,7 @@ function processMenuInput(playerId, input) {
   if (changed) {
     updateSession({ menuIndex: host.state.menuIndex, selectedGame: host.state.selectedGame });
     const current = getSelectedGame();
-    sendArcadeViews(`Selected ${current.title}. Press START to launch.`);
+    sendNavViews(`Selected ${current.title}. Press START to launch.`);
     renderMenu();
   }
   if (input.menuConfirm) {
@@ -938,8 +945,10 @@ function processMenuInput(playerId, input) {
     }
     if (current.id === "pulse-pit") {
       createPulsePit();
+      sendArcadeViews("Pulse Pit is live. Move, fire, burst!");
     } else if (current.id === "uno") {
       createUnoGame();
+      // UNO views sent by updateUnoControllerViews
     }
     updateSession({ status: "playing", selectedGame: current.id });
     setPlayingMode(true);
@@ -952,7 +961,7 @@ function handleQuitToShelf() {
   host.currentMode = "shelf";
   setPlayingMode(false);
   updateSession({ status: "menu" });
-  sendArcadeViews("Back at the arcade shelf. Use PREV/NEXT to browse games.");
+  sendNavViews("Back at the arcade shelf. Use PREV/NEXT to browse games.");
   showOverlay("Arcade Shelf", "Pick Pulse Pit or UNO, then press START from any phone.");
 }
 
@@ -1349,19 +1358,19 @@ function drawShelf() {
   ctx.fillRect(0, 0, host.viewport.width, host.viewport.height);
   
   // Arcade high score display (placeholder)
-  //ctx.font = '20px "Press Start 2P"';
-  //ctx.fillStyle = "#ff0";
-  //ctx.shadowColor = "#ff00ff";
-  //ctx.shadowBlur = 10;
-  //ctx.textAlign = "right";
-  //ctx.fillText("HIGH SCORES", host.viewport.width - 40, 60);
-  //ctx.font = '16px "VT323"';
-  //ctx.fillStyle = "#0ff";
-  //ctx.fillText("1. 2500", host.viewport.width - 40, 100);
-  //ctx.fillText("2. 1800", host.viewport.width - 40, 130);
-  //ctx.fillText("3. 1200", host.viewport.width - 40, 160);
-  //ctx.shadowBlur = 0;
-  //ctx.textAlign = "left";
+  ctx.font = '20px "Press Start 2P"';
+  ctx.fillStyle = "#ff0";
+  ctx.shadowColor = "#ff00ff";
+  ctx.shadowBlur = 10;
+  ctx.textAlign = "right";
+  ctx.fillText("HIGH SCORES", host.viewport.width - 40, 60);
+  ctx.font = '16px "VT323"';
+  ctx.fillStyle = "#0ff";
+  ctx.fillText("1. 2500", host.viewport.width - 40, 100);
+  ctx.fillText("2. 1800", host.viewport.width - 40, 130);
+  ctx.fillText("3. 1200", host.viewport.width - 40, 160);
+  ctx.shadowBlur = 0;
+  ctx.textAlign = "left";
 }
 
 function drawGame() {
@@ -1400,7 +1409,7 @@ async function boot() {
   resizeCanvas();
   renderPlayers();
   renderMenu();
-  sendArcadeViews("Use PREV and NEXT to browse the arcade shelf, then START to launch.");
+  sendNavViews("Use the D-pad to browse games. A selects, START launches.");
   showOverlay("Open the room", "Scan the QR on 1-4 phones to join the ZEST arcade. Pulse Pit supports 1-2 players and UNO supports 2-4.");
   requestAnimationFrame(animate);
 
@@ -1431,7 +1440,7 @@ socket.on("session:state", (state) => {
     host.game = null;
     host.currentMode = "shelf";
     setPlayingMode(false);
-    sendArcadeViews("Scan a phone to enter the arcade.");
+    sendNavViews("Scan a phone to enter the arcade.");
     showOverlay("Waiting for players", "Scan at least one phone to unlock the ZEST arcade shelf.");
     return;
   }
@@ -1440,7 +1449,7 @@ socket.on("session:state", (state) => {
     host.game = null;
     host.currentMode = "shelf";
     setPlayingMode(false);
-    sendArcadeViews(`Current game: ${getSelectedGame().title}. Use PREV/NEXT, then START.`);
+    sendNavViews(`Current game: ${getSelectedGame().title}. Use PREV/NEXT, then START.`);
     showOverlay("Arcade Shelf", `Current selection: ${getSelectedGame().title}. ${state.players.length} player${state.players.length === 1 ? "" : "s"} connected.`);
     return;
   }
@@ -1449,8 +1458,13 @@ socket.on("session:state", (state) => {
     setPlayingMode(true);
     hideOverlay();
     if (!host.game) {
-      if (state.selectedGame === "pulse-pit") createPulsePit();
-      if (state.selectedGame === "uno") createUnoGame();
+      if (state.selectedGame === "pulse-pit") {
+        createPulsePit();
+        sendArcadeViews("Pulse Pit is live. Move, fire, burst!");
+      } else if (state.selectedGame === "uno") {
+        createUnoGame();
+        // UNO views are sent by updateUnoControllerViews
+      }
     }
     if (host.game?.type === "pulse-pit") syncPulsePitRoster();
     if (host.game?.type === "uno") updateUnoControllerViews();
@@ -1479,33 +1493,3 @@ boot().catch((error) => {
   setPlayingMode(false);
   showOverlay("Startup failed", "ZEST could not create a live room.");
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
